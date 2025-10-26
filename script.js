@@ -58,75 +58,105 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function initMobileMenu() {
-        // Create mobile menu toggle button
-        const mobileToggle = document.createElement('button');
-        mobileToggle.className = 'mobile-menu-toggle';
-        mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
-        mobileToggle.style.cssText = `
-            display: none;
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1001;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 18px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s ease;
-        `;
-        
-        document.body.appendChild(mobileToggle);
-        
-        // Show/hide mobile toggle based on screen size
-        function toggleMobileMenu() {
-            if (window.innerWidth <= 480) {
-                mobileToggle.style.display = 'block';
-                document.querySelector('.nav-menu').style.display = 'none';
-            } else {
-                mobileToggle.style.display = 'none';
-                document.querySelector('.nav-menu').style.display = 'flex';
+        // Wait for DOM to be fully ready
+        setTimeout(() => {
+            // Create mobile menu toggle button
+            const mobileToggle = document.createElement('button');
+            mobileToggle.className = 'mobile-menu-toggle';
+            mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+            mobileToggle.style.cssText = `
+                display: none;
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1001;
+                background: #3b82f6;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 12px;
+                font-size: 18px;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                transition: all 0.3s ease;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            `;
+            
+            document.body.appendChild(mobileToggle);
+            
+            // Show/hide mobile toggle based on screen size
+            function toggleMobileMenu() {
+                const navMenu = document.querySelector('.nav-menu');
+                if (!navMenu) return;
+                
+                if (window.innerWidth <= 480) {
+                    mobileToggle.style.display = 'block';
+                    navMenu.style.display = 'none';
+                } else {
+                    mobileToggle.style.display = 'none';
+                    navMenu.style.display = 'flex';
+                    navMenu.style.flexDirection = 'row';
+                    navMenu.style.position = 'sticky';
+                    navMenu.style.top = '0';
+                    navMenu.style.left = 'auto';
+                    navMenu.style.right = 'auto';
+                    navMenu.style.background = '#ffffff';
+                    navMenu.style.zIndex = '100';
+                    navMenu.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                }
             }
-        }
-        
-        // Initial check
-        toggleMobileMenu();
-        
-        // Listen for resize events
-        window.addEventListener('resize', toggleMobileMenu);
-        
-        // Toggle menu visibility
-        mobileToggle.addEventListener('click', function() {
-            const navMenu = document.querySelector('.nav-menu');
-            if (navMenu.style.display === 'none' || navMenu.style.display === '') {
-                navMenu.style.display = 'flex';
-                navMenu.style.flexDirection = 'column';
-                navMenu.style.position = 'fixed';
-                navMenu.style.top = '0';
-                navMenu.style.left = '0';
-                navMenu.style.right = '0';
-                navMenu.style.background = '#ffffff';
-                navMenu.style.zIndex = '1000';
-                navMenu.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                this.innerHTML = '<i class="fas fa-times"></i>';
-            } else {
-                navMenu.style.display = 'none';
-                this.innerHTML = '<i class="fas fa-bars"></i>';
-            }
-        });
-        
-        // Close menu when clicking outside
-        document.addEventListener('click', function(e) {
-            if (window.innerWidth <= 480 && 
-                !mobileToggle.contains(e.target) && 
-                !document.querySelector('.nav-menu').contains(e.target)) {
-                document.querySelector('.nav-menu').style.display = 'none';
-                mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
-            }
-        });
+            
+            // Initial check with delay to ensure DOM is ready
+            setTimeout(toggleMobileMenu, 100);
+            
+            // Listen for resize events
+            window.addEventListener('resize', toggleMobileMenu);
+            
+            // Toggle menu visibility
+            mobileToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const navMenu = document.querySelector('.nav-menu');
+                if (!navMenu) return;
+                
+                if (navMenu.style.display === 'none' || navMenu.style.display === '') {
+                    navMenu.style.display = 'flex';
+                    navMenu.style.flexDirection = 'column';
+                    navMenu.style.position = 'fixed';
+                    navMenu.style.top = '0';
+                    navMenu.style.left = '0';
+                    navMenu.style.right = '0';
+                    navMenu.style.background = '#ffffff';
+                    navMenu.style.zIndex = '1000';
+                    navMenu.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                    this.innerHTML = '<i class="fas fa-times"></i>';
+                } else {
+                    navMenu.style.display = 'none';
+                    this.innerHTML = '<i class="fas fa-bars"></i>';
+                }
+            });
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 480 && 
+                    !mobileToggle.contains(e.target) && 
+                    !document.querySelector('.nav-menu').contains(e.target)) {
+                    const navMenu = document.querySelector('.nav-menu');
+                    if (navMenu) {
+                        navMenu.style.display = 'none';
+                        mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                    }
+                }
+            });
+            
+            // Also listen for orientation change on mobile
+            window.addEventListener('orientationchange', function() {
+                setTimeout(toggleMobileMenu, 500);
+            });
+            
+        }, 200); // Wait 200ms for DOM to be fully ready
     }
 
     function initScrollAnimations() {
