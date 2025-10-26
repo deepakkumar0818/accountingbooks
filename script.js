@@ -3,7 +3,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Navigation functionality
     const navItems = document.querySelectorAll('.nav-item');
+    const mobileNavItems = document.querySelectorAll('.mobile-menu-item');
     const contentSections = document.querySelectorAll('.content-section');
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
 
     // Initialize navigation
     initNavigation();
@@ -18,145 +21,90 @@ document.addEventListener('DOMContentLoaded', function() {
     initInteractiveElements();
 
     function initNavigation() {
+        // Desktop navigation
         navItems.forEach(item => {
-            // Add touch support for mobile
-            item.addEventListener('click', handleNavClick);
-            item.addEventListener('touchend', handleNavClick);
+            item.addEventListener('click', function() {
+                const targetSection = this.getAttribute('data-section');
+                switchSection(targetSection);
+            });
         });
+
+        // Mobile navigation
+        mobileNavItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const targetSection = this.getAttribute('data-section');
+                switchSection(targetSection);
+                closeMobileMenu();
+            });
+        });
+    }
+
+    function initMobileMenu() {
+        if (mobileMenuToggle && mobileMenuOverlay) {
+            mobileMenuToggle.addEventListener('click', function() {
+                toggleMobileMenu();
+            });
+
+            // Close mobile menu when clicking outside
+            mobileMenuOverlay.addEventListener('click', function(e) {
+                if (e.target === mobileMenuOverlay) {
+                    closeMobileMenu();
+                }
+            });
+
+            // Close mobile menu on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileMenuOverlay.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        }
+    }
+
+    function switchSection(targetSection) {
+        // Remove active class from all nav items and sections
+        navItems.forEach(nav => nav.classList.remove('active'));
+        mobileNavItems.forEach(nav => nav.classList.remove('active'));
+        contentSections.forEach(section => section.classList.remove('active'));
         
-        function handleNavClick(e) {
-            e.preventDefault();
-            const targetSection = this.getAttribute('data-section');
+        // Add active class to clicked nav item and corresponding section
+        const desktopNavItem = document.querySelector(`.nav-item[data-section="${targetSection}"]`);
+        const mobileNavItem = document.querySelector(`.mobile-menu-item[data-section="${targetSection}"]`);
+        const targetElement = document.getElementById(targetSection);
+        
+        if (desktopNavItem) desktopNavItem.classList.add('active');
+        if (mobileNavItem) mobileNavItem.classList.add('active');
+        if (targetElement) {
+            targetElement.classList.add('active');
             
-            // Remove active class from all nav items and sections
-            navItems.forEach(nav => nav.classList.remove('active'));
-            contentSections.forEach(section => section.classList.remove('active'));
-            
-            // Add active class to clicked nav item and corresponding section
-            this.classList.add('active');
-            const targetElement = document.getElementById(targetSection);
-            if (targetElement) {
-                targetElement.classList.add('active');
-                
-                // Smooth scroll to top of content
+            // Only scroll to top on desktop, not on mobile
+            if (window.innerWidth > 768) {
                 targetElement.scrollIntoView({ 
                     behavior: 'smooth', 
                     block: 'start' 
                 });
             }
-            
-            // Close mobile menu if it's open
-            if (window.innerWidth <= 480) {
-                const navMenu = document.querySelector('.nav-menu');
-                const mobileToggle = document.querySelector('.mobile-menu-toggle');
-                if (navMenu && mobileToggle) {
-                    navMenu.style.display = 'none';
-                    mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
-                }
-            }
         }
     }
 
-    function initMobileMenu() {
-        // Wait for DOM to be fully ready
-        setTimeout(() => {
-            // Create mobile menu toggle button
-            const mobileToggle = document.createElement('button');
-            mobileToggle.className = 'mobile-menu-toggle';
-            mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
-            mobileToggle.style.cssText = `
-                display: none;
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 1001;
-                background: #3b82f6;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 12px;
-                font-size: 18px;
-                cursor: pointer;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-                transition: all 0.3s ease;
-                -webkit-tap-highlight-color: transparent;
-                touch-action: manipulation;
-            `;
-            
-            document.body.appendChild(mobileToggle);
-            
-            // Show/hide mobile toggle based on screen size
-            function toggleMobileMenu() {
-                const navMenu = document.querySelector('.nav-menu');
-                if (!navMenu) return;
-                
-                if (window.innerWidth <= 480) {
-                    mobileToggle.style.display = 'block';
-                    navMenu.style.display = 'none';
-                } else {
-                    mobileToggle.style.display = 'none';
-                    navMenu.style.display = 'flex';
-                    navMenu.style.flexDirection = 'row';
-                    navMenu.style.position = 'sticky';
-                    navMenu.style.top = '0';
-                    navMenu.style.left = 'auto';
-                    navMenu.style.right = 'auto';
-                    navMenu.style.background = '#ffffff';
-                    navMenu.style.zIndex = '100';
-                    navMenu.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-                }
-            }
-            
-            // Initial check with delay to ensure DOM is ready
-            setTimeout(toggleMobileMenu, 100);
-            
-            // Listen for resize events
-            window.addEventListener('resize', toggleMobileMenu);
-            
-            // Toggle menu visibility
-            mobileToggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const navMenu = document.querySelector('.nav-menu');
-                if (!navMenu) return;
-                
-                if (navMenu.style.display === 'none' || navMenu.style.display === '') {
-                    navMenu.style.display = 'flex';
-                    navMenu.style.flexDirection = 'column';
-                    navMenu.style.position = 'fixed';
-                    navMenu.style.top = '0';
-                    navMenu.style.left = '0';
-                    navMenu.style.right = '0';
-                    navMenu.style.background = '#ffffff';
-                    navMenu.style.zIndex = '1000';
-                    navMenu.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                    this.innerHTML = '<i class="fas fa-times"></i>';
-                } else {
-                    navMenu.style.display = 'none';
-                    this.innerHTML = '<i class="fas fa-bars"></i>';
-                }
-            });
-            
-            // Close menu when clicking outside
-            document.addEventListener('click', function(e) {
-                if (window.innerWidth <= 480 && 
-                    !mobileToggle.contains(e.target) && 
-                    !document.querySelector('.nav-menu').contains(e.target)) {
-                    const navMenu = document.querySelector('.nav-menu');
-                    if (navMenu) {
-                        navMenu.style.display = 'none';
-                        mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
-                    }
-                }
-            });
-            
-            // Also listen for orientation change on mobile
-            window.addEventListener('orientationchange', function() {
-                setTimeout(toggleMobileMenu, 500);
-            });
-            
-        }, 200); // Wait 200ms for DOM to be fully ready
+    function toggleMobileMenu() {
+        if (mobileMenuOverlay.classList.contains('active')) {
+            closeMobileMenu();
+        } else {
+            openMobileMenu();
+        }
+    }
+
+    function openMobileMenu() {
+        mobileMenuOverlay.classList.add('active');
+        mobileMenuToggle.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeMobileMenu() {
+        mobileMenuOverlay.classList.remove('active');
+        mobileMenuToggle.classList.remove('active');
+        document.body.style.overflow = '';
     }
 
     function initScrollAnimations() {
@@ -302,12 +250,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add keyboard navigation support
     document.addEventListener('keydown', function(e) {
-        const activeNavIndex = Array.from(navItems).findIndex(nav => nav.classList.contains('active'));
-        
-        if (e.key === 'ArrowLeft' && activeNavIndex > 0) {
-            navItems[activeNavIndex - 1].click();
-        } else if (e.key === 'ArrowRight' && activeNavIndex < navItems.length - 1) {
-            navItems[activeNavIndex + 1].click();
+        // Only handle navigation if mobile menu is not open
+        if (!mobileMenuOverlay.classList.contains('active')) {
+            const activeNavIndex = Array.from(navItems).findIndex(nav => nav.classList.contains('active'));
+            
+            if (e.key === 'ArrowLeft' && activeNavIndex > 0) {
+                navItems[activeNavIndex - 1].click();
+            } else if (e.key === 'ArrowRight' && activeNavIndex < navItems.length - 1) {
+                navItems[activeNavIndex + 1].click();
+            }
         }
     });
 
@@ -344,7 +295,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add section highlighting based on scroll position
     function highlightActiveSection() {
         const sections = document.querySelectorAll('.content-section');
-        const navItems = document.querySelectorAll('.nav-item');
         
         let currentSection = '';
         
@@ -358,8 +308,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Update navigation
+        // Update both desktop and mobile navigation
         navItems.forEach(nav => {
+            nav.classList.remove('active');
+            if (nav.getAttribute('data-section') === currentSection) {
+                nav.classList.add('active');
+            }
+        });
+        
+        mobileNavItems.forEach(nav => {
             nav.classList.remove('active');
             if (nav.getAttribute('data-section') === currentSection) {
                 nav.classList.add('active');
@@ -416,7 +373,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize tooltips
     initTooltips();
-
 
     // Add loading animation
     function initLoadingAnimation() {
