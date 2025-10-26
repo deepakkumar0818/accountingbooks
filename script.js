@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize navigation
     initNavigation();
     
+    // Initialize mobile menu
+    initMobileMenu();
+    
     // Initialize scroll animations
     initScrollAnimations();
     
@@ -16,26 +19,113 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function initNavigation() {
         navItems.forEach(item => {
-            item.addEventListener('click', function() {
-                const targetSection = this.getAttribute('data-section');
+            // Add touch support for mobile
+            item.addEventListener('click', handleNavClick);
+            item.addEventListener('touchend', handleNavClick);
+        });
+        
+        function handleNavClick(e) {
+            e.preventDefault();
+            const targetSection = this.getAttribute('data-section');
+            
+            // Remove active class from all nav items and sections
+            navItems.forEach(nav => nav.classList.remove('active'));
+            contentSections.forEach(section => section.classList.remove('active'));
+            
+            // Add active class to clicked nav item and corresponding section
+            this.classList.add('active');
+            const targetElement = document.getElementById(targetSection);
+            if (targetElement) {
+                targetElement.classList.add('active');
                 
-                // Remove active class from all nav items and sections
-                navItems.forEach(nav => nav.classList.remove('active'));
-                contentSections.forEach(section => section.classList.remove('active'));
-                
-                // Add active class to clicked nav item and corresponding section
-                this.classList.add('active');
-                const targetElement = document.getElementById(targetSection);
-                if (targetElement) {
-                    targetElement.classList.add('active');
-                    
-                    // Smooth scroll to top of content
-                    targetElement.scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'start' 
-                    });
+                // Smooth scroll to top of content
+                targetElement.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }
+            
+            // Close mobile menu if it's open
+            if (window.innerWidth <= 480) {
+                const navMenu = document.querySelector('.nav-menu');
+                const mobileToggle = document.querySelector('.mobile-menu-toggle');
+                if (navMenu && mobileToggle) {
+                    navMenu.style.display = 'none';
+                    mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
                 }
-            });
+            }
+        }
+    }
+
+    function initMobileMenu() {
+        // Create mobile menu toggle button
+        const mobileToggle = document.createElement('button');
+        mobileToggle.className = 'mobile-menu-toggle';
+        mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+        mobileToggle.style.cssText = `
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        `;
+        
+        document.body.appendChild(mobileToggle);
+        
+        // Show/hide mobile toggle based on screen size
+        function toggleMobileMenu() {
+            if (window.innerWidth <= 480) {
+                mobileToggle.style.display = 'block';
+                document.querySelector('.nav-menu').style.display = 'none';
+            } else {
+                mobileToggle.style.display = 'none';
+                document.querySelector('.nav-menu').style.display = 'flex';
+            }
+        }
+        
+        // Initial check
+        toggleMobileMenu();
+        
+        // Listen for resize events
+        window.addEventListener('resize', toggleMobileMenu);
+        
+        // Toggle menu visibility
+        mobileToggle.addEventListener('click', function() {
+            const navMenu = document.querySelector('.nav-menu');
+            if (navMenu.style.display === 'none' || navMenu.style.display === '') {
+                navMenu.style.display = 'flex';
+                navMenu.style.flexDirection = 'column';
+                navMenu.style.position = 'fixed';
+                navMenu.style.top = '0';
+                navMenu.style.left = '0';
+                navMenu.style.right = '0';
+                navMenu.style.background = '#ffffff';
+                navMenu.style.zIndex = '1000';
+                navMenu.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                this.innerHTML = '<i class="fas fa-times"></i>';
+            } else {
+                navMenu.style.display = 'none';
+                this.innerHTML = '<i class="fas fa-bars"></i>';
+            }
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 480 && 
+                !mobileToggle.contains(e.target) && 
+                !document.querySelector('.nav-menu').contains(e.target)) {
+                document.querySelector('.nav-menu').style.display = 'none';
+                mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+            }
         });
     }
 
@@ -297,138 +387,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
     initTooltips();
 
-    // Add search functionality
-    function initSearch() {
-        const searchInput = document.createElement('input');
-        searchInput.type = 'text';
-        searchInput.placeholder = 'Search modules and features...';
-        searchInput.className = 'search-input';
-        searchInput.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 15px;
-            border: 2px solid #667eea;
-            border-radius: 25px;
-            font-size: 14px;
-            width: 250px;
-            z-index: 1000;
-            outline: none;
-            transition: all 0.3s ease;
-        `;
-        
-        document.body.appendChild(searchInput);
-        
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const sections = document.querySelectorAll('.content-section');
-            
-            sections.forEach(section => {
-                const content = section.textContent.toLowerCase();
-                if (content.includes(searchTerm) || searchTerm === '') {
-                    section.style.display = 'block';
-                } else {
-                    section.style.display = 'none';
-                }
-            });
-        });
-        
-        searchInput.addEventListener('focus', function() {
-            this.style.width = '300px';
-            this.style.borderColor = '#764ba2';
-        });
-        
-        searchInput.addEventListener('blur', function() {
-            this.style.width = '250px';
-            this.style.borderColor = '#667eea';
-        });
-    }
-
-    // Initialize search
-    initSearch();
-
-    // Add print functionality
-    function initPrint() {
-        const printButton = document.createElement('button');
-        printButton.innerHTML = '<i class="fas fa-print"></i> Print';
-        printButton.className = 'print-button';
-        printButton.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 14px;
-            z-index: 1000;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-            transition: all 0.3s ease;
-        `;
-        
-        document.body.appendChild(printButton);
-        
-        printButton.addEventListener('click', function() {
-            window.print();
-        });
-        
-        printButton.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
-            this.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
-        });
-        
-        printButton.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = '0 5px 15px rgba(102, 126, 234, 0.3)';
-        });
-    }
-
-    // Initialize print functionality
-    initPrint();
-
-    // Add theme toggle
-    function initThemeToggle() {
-        const themeButton = document.createElement('button');
-        themeButton.innerHTML = '<i class="fas fa-moon"></i>';
-        themeButton.className = 'theme-toggle';
-        themeButton.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: 50px;
-            height: 50px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 18px;
-            z-index: 1000;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-            transition: all 0.3s ease;
-        `;
-        
-        document.body.appendChild(themeButton);
-        
-        let isDark = false;
-        
-        themeButton.addEventListener('click', function() {
-            isDark = !isDark;
-            
-            if (isDark) {
-                document.body.style.filter = 'invert(1) hue-rotate(180deg)';
-                this.innerHTML = '<i class="fas fa-sun"></i>';
-            } else {
-                document.body.style.filter = 'none';
-                this.innerHTML = '<i class="fas fa-moon"></i>';
-            }
-        });
-    }
-
-    // Initialize theme toggle
-    initThemeToggle();
 
     // Add loading animation
     function initLoadingAnimation() {
